@@ -24,8 +24,8 @@ app.get('/health', (req, res) => {
     res.json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
-// Routes
-app.use('/api/auth', require('./routes/auth'));
+// Routes - USING TEST ROUTE TO DEBUG 502
+app.use('/api/auth', require('./routes/auth-test'));
 
 // Connect to MongoDB
 const PORT = process.env.PORT || 5000;
