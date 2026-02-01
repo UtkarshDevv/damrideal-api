@@ -8,13 +8,14 @@ const User = require('../models/User');
 // Nodemailer Transporter
 // NOTE: For production, use environment variables for credentials.
 // For development/demo, ensure allow "less secure apps" or use App Passwords if Gmail.
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
+// TEMPORARILY DISABLED TO DEBUG 502
+// const transporter = nodemailer.createTransport({
+//     service: 'gmail',
+//     auth: {
+//         user: process.env.EMAIL_USER,
+//         pass: process.env.EMAIL_PASS
+//     }
+// });
 
 // 1. Send OTP (Start Registration)
 router.post('/send-otp', async (req, res) => {
