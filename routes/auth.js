@@ -61,18 +61,22 @@ router.post('/send-otp', async (req, res) => {
             text: `Your verification code is ${otp}. It expires in 10 minutes.`
         };
 
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.log(error);
-                return res.status(500).json({ msg: 'Error sending email' });
-            } else {
-                return res.json({ msg: 'OTP sent to email' });
-            }
-        });
+        try {
+            await transporter.sendMail(mailOptions);
+            return res.json({ msg: 'OTP sent to email', success: true });
+        } catch (emailError) {
+            console.error('Email sending error:', emailError);
+            // Still return success since user is saved, but note email failed
+            return res.json({
+                msg: 'User registered but email failed. OTP: ' + otp,
+                success: true,
+                emailFailed: true
+            });
+        }
 
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error');
+        console.error('Server error:', err.message);
+        res.status(500).json({ msg: 'Server error', error: err.message });
     }
 });
 
