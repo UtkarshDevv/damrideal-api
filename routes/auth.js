@@ -21,79 +21,16 @@ router.post('/send-otp', async (req, res) => {
     console.log('=== SEND-OTP ROUTE CALLED ===');
     console.log('Request body:', req.body);
 
-    const { name, email, phone, city, userType } = req.body;
-    console.log('Extracted fields:', { name, email, phone, city, userType });
-
+    // Simple test response
     try {
-        console.log('Checking if user exists...');
-        let user = await User.findOne({ email });
-        console.log('User found:', user ? 'Yes' : 'No');
-
-        if (user && user.isVerified && user.pin) {
-            console.log('User already verified, returning error');
-            return res.status(400).json({ msg: 'User already exists and is verified. Please login.' });
-        }
-
-        // Generate 6 digit OTP
-        console.log('Generating OTP...');
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
-        console.log('OTP generated:', otp);
-
-        if (!user) {
-            console.log('Creating new user...');
-            user = new User({
-                name,
-                email,
-                phone,
-                city,
-                userType,
-                otp,
-                otpExpires
-            });
-        } else {
-            console.log('Updating existing user...');
-            // Update existing unverified user
-            user.name = name;
-            user.phone = phone;
-            user.city = city;
-            user.userType = userType;
-            user.otp = otp;
-            user.otpExpires = otpExpires;
-        }
-
-        console.log('Saving user to database...');
-        await user.save();
-        console.log('User saved successfully');
-
-        // Send Email
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: 'Damrideal Verification Code',
-            text: `Your verification code is ${otp}. It expires in 10 minutes.`
-        };
-
-        try {
-            console.log('Attempting to send email...');
-            await transporter.sendMail(mailOptions);
-            console.log('Email sent successfully');
-            return res.json({ msg: 'OTP sent to email', success: true });
-        } catch (emailError) {
-            console.error('Email sending error:', emailError);
-            // Still return success since user is saved, but note email failed
-            return res.json({
-                msg: 'User registered but email failed. OTP: ' + otp,
-                success: true,
-                emailFailed: true
-            });
-        }
-
+        return res.json({
+            msg: 'Test response - route is working!',
+            success: true,
+            receivedData: req.body
+        });
     } catch (err) {
-        console.error('=== SERVER ERROR ===');
-        console.error('Error message:', err.message);
-        console.error('Error stack:', err.stack);
-        res.status(500).json({ msg: 'Server error', error: err.message });
+        console.error('Error:', err);
+        return res.status(500).json({ msg: 'Error', error: err.message });
     }
 });
 
