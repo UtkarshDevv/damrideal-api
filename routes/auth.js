@@ -22,16 +22,51 @@ router.post('/send-otp', async (req, res) => {
     console.log('=== SEND-OTP ROUTE CALLED ===');
     console.log('Request body:', req.body);
 
-    // Simple test response
+    const { name, email, phone, city, userType } = req.body;
+
     try {
+        let user = await User.findOne({ email });
+
+        if (user && user.isVerified && user.pin) {
+            return res.status(400).json({ msg: 'User already exists and is verified. Please login.' });
+        }
+
+        // Generate 6 digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+
+        if (!user) {
+            user = new User({
+                name,
+                email,
+                phone,
+                city,
+                userType,
+                otp,
+                otpExpires
+            });
+        } else {
+            // Update existing unverified user
+            user.name = name;
+            user.phone = phone;
+            user.city = city;
+            user.userType = userType;
+            user.otp = otp;
+            user.otpExpires = otpExpires;
+        }
+
+        await user.save();
+
+        // Return OTP in response (email disabled for now)
         return res.json({
-            msg: 'Test response - route is working!',
+            msg: 'OTP generated successfully. Check console for OTP.',
             success: true,
-            receivedData: req.body
+            otp: otp // For testing - remove in production
         });
+
     } catch (err) {
-        console.error('Error:', err);
-        return res.status(500).json({ msg: 'Error', error: err.message });
+        console.error('Server error:', err.message);
+        res.status(500).json({ msg: 'Server error', error: err.message });
     }
 });
 
