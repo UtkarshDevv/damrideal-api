@@ -27,7 +27,7 @@ const ProjectSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['Featured', 'Lead', 'EOI'],
+        enum: ['Featured', 'Lead', 'EOI', 'User Listing'],
         default: 'Lead'
     },
     forSale: {
@@ -61,7 +61,7 @@ const ProjectSchema = new mongoose.Schema({
     }],
     status: {
         type: String,
-        enum: ['Active', 'Inactive', 'Coming Soon', 'Sold Out'],
+        enum: ['Active', 'Inactive', 'Coming Soon', 'Sold Out', 'Pending'],
         default: 'Active'
     },
     createdBy: {

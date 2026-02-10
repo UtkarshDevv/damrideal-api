@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const User = require('../models/User');
+const auth = require('../middleware/auth');
 
 // Nodemailer Transporter
 // NOTE: For production, use environment variables for credentials.
@@ -27,7 +28,7 @@ router.post('/send-otp', async (req, res) => {
     try {
         let user = await User.findOne({ email });
 
-        if (user && user.isVerified && user.pin) {
+        if (user && user.isVerified && user.password) {
             return res.status(400).json({ msg: 'User already exists and is verified. Please login.' });
         }
 
@@ -106,9 +107,9 @@ router.post('/verify-otp', async (req, res) => {
     }
 });
 
-// 3. Set PIN (Finalize Registration)
-router.post('/set-pin', async (req, res) => {
-    const { email, pin } = req.body;
+// 3. Set Password (Finalize Registration)
+router.post('/set-password', async (req, res) => {
+    const { email, password } = req.body;
 
     try {
         const user = await User.findOne({ email });
@@ -119,9 +120,9 @@ router.post('/set-pin', async (req, res) => {
             return res.status(400).json({ msg: 'User email not verified' });
         }
 
-        // Hash PIN
+        // Hash Password
         const salt = await bcrypt.genSalt(10);
-        user.pin = await bcrypt.hash(pin, salt);
+        user.password = await bcrypt.hash(password, salt);
         await user.save();
 
         // Create Token
@@ -149,7 +150,7 @@ router.post('/set-pin', async (req, res) => {
 
 // 4. Login
 router.post('/login', async (req, res) => {
-    const { email, pin } = req.body;
+    const { email, password } = req.body;
 
     try {
         const user = await User.findOne({ email });
@@ -158,11 +159,11 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ msg: 'Invalid Credentials' });
         }
 
-        if (!user.pin) {
-            return res.status(400).json({ msg: 'PIN not set' });
+        if (!user.password) {
+            return res.status(400).json({ msg: 'Password not set' });
         }
 
-        const isMatch = await bcrypt.compare(pin, user.pin);
+        const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
             return res.status(400).json({ msg: 'Invalid Credentials' });
@@ -232,9 +233,9 @@ router.post('/forgot-password', async (req, res) => {
     }
 });
 
-// 6. Reset PIN
-router.post('/reset-pin', async (req, res) => {
-    const { email, pin } = req.body;
+// 6. Reset Password
+router.post('/reset-password', async (req, res) => {
+    const { email, password } = req.body;
 
     try {
         const user = await User.findOne({ email });
@@ -242,18 +243,24 @@ router.post('/reset-pin', async (req, res) => {
             return res.status(400).json({ msg: 'User not found' });
         }
 
-        // In a real app, we should check a "resetAuthorized" token or flag set by verify-otp.
-        // For this demo, we assume if they know the email and just verified OTP (which clears OTP), they can reset.
-        // Ideally verify-otp should return a temp token to pass here.
-        // We will trust the flow for now or check if isVerified is true (which it is).
-
-        // Hash PIN
+        // Hash Password
         const salt = await bcrypt.genSalt(10);
-        user.pin = await bcrypt.hash(pin, salt);
+        user.password = await bcrypt.hash(password, salt);
         await user.save();
 
-        res.json({ msg: 'PIN reset successfully' });
+        res.json({ msg: 'Password reset successfully' });
 
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+});
+
+// 7. Get Current User Profile
+router.get('/me', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select('-password');
+        res.json(user);
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server error');

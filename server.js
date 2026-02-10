@@ -43,6 +43,10 @@ app.use('/api/projects', require('./routes/projects'));
 app.use('/api/requirements', require('./routes/requirements'));
 app.use('/api/upload', require('./routes/upload'));
 
+// Admin Routes
+app.use('/api/admin', require('./admin/routes/adminAuth'));
+app.use('/api/admin/dashboard', require('./admin/routes/adminDashboard'));
+
 // Connect to MongoDB
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/damrideals';
