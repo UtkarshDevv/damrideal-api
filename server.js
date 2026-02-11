@@ -58,4 +58,5 @@ mongoose.connect(MONGO_URI, { family: 4 })
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+    console.log(`Base URL: ${process.env.BASE_URL || 'Not defined'}`);
 });

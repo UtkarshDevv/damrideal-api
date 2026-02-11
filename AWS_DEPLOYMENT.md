@@ -48,7 +48,7 @@ sudo apt-get install -y nodejs
 ### Install Git & Clone Repository
 ```bash
 sudo apt-get install git -y
-git clone https://github.com/your-username/damrideal-api.git
+git clone https://github.com/UtkarshDevv/damrideal-api
 cd damrideal-api
 ```
 
@@ -110,10 +110,10 @@ Nginx will redirect Port 80 traffic to your Node.js app on Port 5000.
    ```nginx
    server {
        listen 80;
-       server_name yourdomain.com; # Or your server's IP
+       server_name your-public-ip-here; # <--- Replace with your EC2 Public IP
 
        location / {
-           proxy_pass http://localhost:5000;
+           proxy_pass http://localhost:5000; # <--- Keep as localhost
            proxy_http_version 1.1;
            proxy_set_header Upgrade $http_upgrade;
            proxy_set_header Connection 'upgrade';
@@ -122,6 +122,7 @@ Nginx will redirect Port 80 traffic to your Node.js app on Port 5000.
        }
    }
    ```
+
 3. **Enable Configuration**:
    ```bash
    sudo ln -s /etc/nginx/sites-available/damrideal-api /etc/nginx/sites-enabled/
