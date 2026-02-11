@@ -14,6 +14,28 @@ router.get('/', async (req, res) => {
     }
 });
 
+// GET unique locations
+router.get('/locations', async (req, res) => {
+    try {
+        const locations = await Project.distinct('location');
+        res.json(locations.filter(Boolean)); // Remove null/empty values
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ msg: 'Server error' });
+    }
+});
+
+// GET all projects created by current user
+router.get('/my-listings', auth, async (req, res) => {
+    try {
+        const projects = await Project.find({ createdBy: req.user.id }).sort({ createdAt: -1 });
+        res.json(projects);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ msg: 'Server error' });
+    }
+});
+
 // GET single project by ID
 router.get('/:id', async (req, res) => {
     try {

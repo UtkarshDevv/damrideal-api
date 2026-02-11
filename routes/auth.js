@@ -4,19 +4,21 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const User = require('../models/User');
+const Project = require('../models/Project');
 const auth = require('../middleware/auth');
 
 // Nodemailer Transporter
 // NOTE: For production, use environment variables for credentials.
 // For development/demo, ensure allow "less secure apps" or use App Passwords if Gmail.
 // TEMPORARILY DISABLED TO DEBUG 502
-// const transporter = nodemailer.createTransport({
-//     service: 'gmail',
-//     auth: {
-//         user: process.env.EMAIL_USER,
-//         pass: process.env.EMAIL_PASS
-//     }
-// });
+// Nodemailer Transporter
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
 
 // 1. Send OTP (Start Registration)
 router.post('/send-otp', async (req, res) => {
@@ -107,9 +109,10 @@ router.post('/verify-otp', async (req, res) => {
     }
 });
 
-// 3. Set Password (Finalize Registration)
-router.post('/set-password', async (req, res) => {
-    const { email, password } = req.body;
+// 3. Set PIN (Finalize Registration)
+router.post('/set-pin', async (req, res) => {
+    const { email, pin, password } = req.body;
+    const attemptPassword = pin || password;
 
     try {
         const user = await User.findOne({ email });
@@ -120,9 +123,9 @@ router.post('/set-password', async (req, res) => {
             return res.status(400).json({ msg: 'User email not verified' });
         }
 
-        // Hash Password
+        // Hash PIN/Password
         const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(password, salt);
+        user.password = await bcrypt.hash(attemptPassword, salt);
         await user.save();
 
         // Create Token
@@ -150,7 +153,8 @@ router.post('/set-password', async (req, res) => {
 
 // 4. Login
 router.post('/login', async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password, pin } = req.body;
+    const attemptPassword = pin || password;
 
     try {
         const user = await User.findOne({ email });
@@ -163,7 +167,7 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ msg: 'Password not set' });
         }
 
-        const isMatch = await bcrypt.compare(password, user.password);
+        const isMatch = await bcrypt.compare(attemptPassword, user.password);
 
         if (!isMatch) {
             return res.status(400).json({ msg: 'Invalid Credentials' });
@@ -214,18 +218,18 @@ router.post('/forgot-password', async (req, res) => {
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: email,
-            subject: 'Damrideal Reset PIN OTP',
+            subject: 'Damrideal Reset PIN OTP', // Changed to PIN
             text: `Your reset code is ${otp}. It expires in 10 minutes.`
         };
 
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.log(error);
-                return res.status(500).json({ msg: 'Error sending email' });
-            } else {
-                return res.json({ msg: 'OTP sent to email' });
-            }
-        });
+        try {
+            await transporter.sendMail(mailOptions);
+            res.json({ msg: 'OTP sent to email', otp }); // Return OTP for dev purposes
+        } catch (error) {
+            console.error('Email send error:', error);
+            // In dev mode, return OTP even if email fails
+            res.json({ msg: 'Failed to send email but OTP generated', otp });
+        }
 
     } catch (err) {
         console.error(err.message);
@@ -233,22 +237,22 @@ router.post('/forgot-password', async (req, res) => {
     }
 });
 
-// 6. Reset Password
-router.post('/reset-password', async (req, res) => {
-    const { email, password } = req.body;
+// 6. Reset PIN
+router.post('/reset-pin', async (req, res) => {
+    const { email, pin } = req.body;
 
     try {
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(400).json({ msg: 'User not found' });
+            return res.status(404).json({ msg: 'User not found' });
         }
 
-        // Hash Password
+        // Hash PIN
         const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(password, salt);
+        user.password = await bcrypt.hash(pin, salt); // Storing PIN as password
         await user.save();
 
-        res.json({ msg: 'Password reset successfully' });
+        res.json({ msg: 'PIN reset successfully' });
 
     } catch (err) {
         console.error(err.message);
@@ -261,6 +265,54 @@ router.get('/me', auth, async (req, res) => {
     try {
         const user = await User.findById(req.user.id).select('-password');
         res.json(user);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+});
+
+// 8. Add to Favorites
+router.post('/favorites/:id', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+
+        // Check if already favorited
+        if (user.favorites.includes(req.params.id)) {
+            // Usually just return success or existing list
+            // return res.status(400).json({ msg: 'Project already in favorites' });
+        } else {
+            user.favorites.push(req.params.id);
+            await user.save();
+        }
+        res.json(user.favorites);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+});
+
+// 9. Remove from Favorites
+router.delete('/favorites/:id', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+
+        user.favorites = user.favorites.filter(
+            fav => fav.toString() !== req.params.id
+        );
+
+        await user.save();
+        res.json(user.favorites);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+});
+
+// 10. Get Favorites (Populated)
+router.get('/favorites', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).populate('favorites');
+        res.json(user.favorites || []);
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server error');

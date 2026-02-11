@@ -31,7 +31,11 @@ const UserSchema = new mongoose.Schema({
         default: false
     },
     otp: String,
-    otpExpires: Date
+    otpExpires: Date,
+    favorites: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Project'
+    }]
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', UserSchema);

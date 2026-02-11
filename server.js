@@ -42,6 +42,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/projects', require('./routes/projects'));
 app.use('/api/requirements', require('./routes/requirements'));
 app.use('/api/upload', require('./routes/upload'));
+app.use('/api/settings', require('./routes/settings'));
 
 // Admin Routes
 app.use('/api/admin', require('./admin/routes/adminAuth'));

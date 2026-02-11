@@ -19,7 +19,7 @@ const seedAdmin = async () => {
         await mongoose.connect(mongoUri, { family: 4 });
         console.log('MongoDB Connected...');
 
-        const adminEmail = 'Aman@daamrideals.com';
+        const adminEmail = 'aman@daamrideals.com';
         const adminPassword = 'Aman.DD@1212';
 
         let admin = await User.findOne({ email: adminEmail });
