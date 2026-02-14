@@ -12,7 +12,13 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: true, // Allow all origins (reflects request origin)
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
+app.options('*', cors()); // Enable pre-flight for all routes
 app.use(express.json());
 
 // Request Logging Middleware - Log all incoming requests
