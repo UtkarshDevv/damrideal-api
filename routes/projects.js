@@ -6,7 +6,12 @@ const auth = require('../middleware/auth');
 // GET all projects
 router.get('/', async (req, res) => {
     try {
-        const projects = await Project.find().sort({ createdAt: -1 });
+        const filter = {};
+        if (req.query.forSale) filter.forSale = req.query.forSale === 'true';
+        if (req.query.forRent) filter.forRent = req.query.forRent === 'true';
+        if (req.query.type) filter.type = req.query.type;
+
+        const projects = await Project.find(filter).sort({ createdAt: -1 });
         res.json(projects);
     } catch (err) {
         console.error(err.message);

@@ -22,6 +22,9 @@ const PropertySchema = new mongoose.Schema({
     configuration: { // Dropdown 1BHK till 5BHK in csv and custom also
         type: String // E.g., "3BHK, 4BHK" - CSV string to simplify multiple selections or custom
     },
+    description: {
+        type: String
+    },
     videoLink: {
         type: String
     },
@@ -40,7 +43,6 @@ const PropertySchema = new mongoose.Schema({
     imageUrl: { type: String },
     imageName: { type: String },
     galleryUrls: [{ type: String }],
-    brochureUrl: { type: String },
     type: {
         type: String,
         enum: ['Featured', 'Lead', 'EOI'],

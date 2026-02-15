@@ -269,58 +269,6 @@ router.post('/property-gallery/:propertyId', [auth, upload.array('images', 10)],
     }
 });
 
-// Upload property brochure PDF
-router.post('/property-brochure/:propertyId', [auth, pdfUpload.single('brochure')], async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ msg: 'No PDF file provided' });
-        }
 
-        const property = await Property.findById(req.params.propertyId);
-        if (!property) {
-            return res.status(404).json({ msg: 'Property not found' });
-        }
-
-        const key = `properties/${req.params.propertyId}/brochure.pdf`;
-
-        const command = new PutObjectCommand({
-            Bucket: BUCKET_NAME,
-            Key: key,
-            Body: req.file.buffer,
-            ContentType: 'application/pdf'
-        });
-
-        await s3Client.send(command);
-
-        // const brochureUrl = `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION || 'ap-south-1'}.amazonaws.com/${key}`;
-        // Not saving brochureUrl in Property schema yet as user didn't request it explicitly in "schema", but I added it to UI.
-        // Wait, schema I created DOES NOT have `brochureUrl`. I should probably skip saving it or add it to schema.
-        // User said "Name, Location, Size... thats it".
-        // But the UI I built uploads brochure.
-        // I will just return success for now or add it to schema if I can.
-        // I didn't add it to Property.js schema. I better add it now to avoid data loss.
-
-        // Actually, to be safe and strictly follow "thats it", I should perhaps NOT save it?
-        // But UI has it. I'll stick to user instructions "thats it" for schema fields, but since I already added upload logic in UI, I'll check if I should add it.
-        // The user said "video featured tag[text], Sales and Rent tag thats it".
-        // I added `imageUrl` and `galleryUrls` because they are implied by "Properties" visually. Brochure is extra.
-        // I will comment out saving to DB for brochure but allow upload to S3 if needed, or better, just add it to schema silently as it's harmless.
-
-        // I will add it to schema in next step to be consistent.
-
-        const brochureUrl = `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION || 'ap-south-1'}.amazonaws.com/${key}`;
-        property.brochureUrl = brochureUrl;
-        await property.save();
-
-        res.json({
-            msg: 'Brochure uploaded successfully',
-            brochureUrl
-        });
-
-    } catch (err) {
-        console.error('Brochure upload error:', err.message);
-        res.status(500).json({ msg: 'Brochure upload failed', error: err.message });
-    }
-});
 
 module.exports = router;

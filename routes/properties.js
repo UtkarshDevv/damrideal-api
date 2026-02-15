@@ -17,7 +17,12 @@ router.get('/locations', async (req, res) => {
 // GET all properties (For Search Page)
 router.get('/', async (req, res) => {
     try {
-        const properties = await Property.find().sort({ createdAt: -1 });
+        const filter = {};
+        if (req.query.forSale) filter.forSale = req.query.forSale === 'true';
+        if (req.query.forRent) filter.forRent = req.query.forRent === 'true';
+        if (req.query.type) filter.type = req.query.type;
+
+        const properties = await Property.find(filter).sort({ createdAt: -1 });
         res.json(properties);
     } catch (err) {
         console.error(err.message);
@@ -51,8 +56,8 @@ router.post('/', auth, async (req, res) => {
 
         const {
             name, location, price, size, status,
-            configuration, videoLink, featuredTag,
-            forSale, forRent, imageUrl, galleryUrls
+            configuration, description, videoLink, featuredTag,
+            forSale, forRent, imageUrl, galleryUrls, type
         } = req.body;
 
         const newProperty = new Property({
@@ -65,12 +70,14 @@ router.post('/', auth, async (req, res) => {
             size,
             status,
             configuration, // Expecting CSV string
+            description,
             videoLink,
             featuredTag,
             forSale,
             forRent,
             imageUrl,
             galleryUrls: galleryUrls || [],
+            type: type || 'Lead',
             createdBy: req.user.id
         });
 
@@ -87,8 +94,8 @@ router.put('/:id', auth, async (req, res) => {
     try {
         const {
             name, location, price, size, status,
-            configuration, videoLink, featuredTag,
-            forSale, forRent, imageUrl, galleryUrls
+            configuration, description, videoLink, featuredTag,
+            forSale, forRent, imageUrl, galleryUrls, type
         } = req.body;
 
         const updateFields = {};
@@ -98,12 +105,14 @@ router.put('/:id', auth, async (req, res) => {
         if (size !== undefined) updateFields.size = size;
         if (status !== undefined) updateFields.status = status;
         if (configuration !== undefined) updateFields.configuration = configuration;
+        if (description !== undefined) updateFields.description = description;
         if (videoLink !== undefined) updateFields.videoLink = videoLink;
         if (featuredTag !== undefined) updateFields.featuredTag = featuredTag;
         if (forSale !== undefined) updateFields.forSale = forSale;
         if (forRent !== undefined) updateFields.forRent = forRent;
         if (imageUrl !== undefined) updateFields.imageUrl = imageUrl;
         if (galleryUrls !== undefined) updateFields.galleryUrls = galleryUrls;
+        if (type !== undefined) updateFields.type = type;
 
         const property = await Property.findByIdAndUpdate(
             req.params.id,
