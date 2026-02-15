@@ -3,6 +3,17 @@ const router = express.Router();
 const Property = require('../models/Property');
 const auth = require('../middleware/auth');
 
+// GET all unique locations
+router.get('/locations', async (req, res) => {
+    try {
+        const locations = await Property.distinct('location.city');
+        res.json(locations);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ msg: 'Server error' });
+    }
+});
+
 // GET all properties (For Search Page)
 router.get('/', async (req, res) => {
     try {

@@ -309,8 +309,8 @@ router.post('/property-brochure/:propertyId', [auth, pdfUpload.single('brochure'
         // I will add it to schema in next step to be consistent.
 
         const brochureUrl = `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION || 'ap-south-1'}.amazonaws.com/${key}`;
-        // property.brochureUrl = brochureUrl; // Schema doesn't have it yet.
-        // await property.save();
+        property.brochureUrl = brochureUrl;
+        await property.save();
 
         res.json({
             msg: 'Brochure uploaded successfully',

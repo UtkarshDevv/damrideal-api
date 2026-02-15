@@ -40,6 +40,12 @@ const PropertySchema = new mongoose.Schema({
     imageUrl: { type: String },
     imageName: { type: String },
     galleryUrls: [{ type: String }],
+    brochureUrl: { type: String },
+    type: {
+        type: String,
+        enum: ['Featured', 'Lead', 'EOI'],
+        default: 'Lead'
+    },
 
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,

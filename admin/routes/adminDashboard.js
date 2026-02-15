@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const Project = require('../../models/Project');
+const Property = require('../../models/Property');
 const Requirement = require('../../models/Requirement');
 const User = require('../../models/User');
 
@@ -27,6 +28,7 @@ router.get('/stats', verifyAdmin, async (req, res) => {
     try {
         // Total counts
         const totalProjects = await Project.countDocuments();
+        const totalProperties = await Property.countDocuments();
         const totalRequirements = await Requirement.countDocuments();
         const totalUsers = await User.countDocuments();
 
@@ -36,9 +38,14 @@ router.get('/stats', verifyAdmin, async (req, res) => {
         const soldOutProjects = await Project.countDocuments({ status: 'Sold Out' });
         const inactiveProjects = await Project.countDocuments({ status: 'Inactive' });
 
-        // Projects by listing type
-        const forSaleCount = await Project.countDocuments({ forSale: true });
-        const forRentCount = await Project.countDocuments({ forRent: true });
+        // Properties by status
+        const activeProperties = await Property.countDocuments({ status: 'Active' });
+        const soldOutProperties = await Property.countDocuments({ status: 'Sold Out' });
+        const inactiveProperties = await Property.countDocuments({ status: 'Inactive' });
+
+        // Listing types (combined or separate - let's do both for projects and properties)
+        const forSaleCount = await Project.countDocuments({ forSale: true }) + await Property.countDocuments({ forSale: true });
+        const forRentCount = await Project.countDocuments({ forRent: true }) + await Property.countDocuments({ forRent: true });
 
         // Requirements by status
         const openRequirements = await Requirement.countDocuments({ status: 'Open' });
@@ -50,6 +57,12 @@ router.get('/stats', verifyAdmin, async (req, res) => {
             .sort({ createdAt: -1 })
             .limit(5)
             .select('title location priceRange status type imageUrl createdAt');
+
+        // Recent properties (last 5)
+        const recentProperties = await Property.find()
+            .sort({ createdAt: -1 })
+            .limit(5)
+            .select('name location price status imageUrl createdAt');
 
         // Recent requirements (last 5)
         const recentRequirements = await Requirement.find()
@@ -67,12 +80,16 @@ router.get('/stats', verifyAdmin, async (req, res) => {
         res.json({
             stats: {
                 totalProjects,
+                totalProperties,
                 totalRequirements,
                 totalUsers,
                 activeProjects,
                 comingSoonProjects,
                 soldOutProjects,
                 inactiveProjects,
+                activeProperties,
+                soldOutProperties,
+                inactiveProperties,
                 forSaleCount,
                 forRentCount,
                 openRequirements,
@@ -80,6 +97,7 @@ router.get('/stats', verifyAdmin, async (req, res) => {
                 closedRequirements
             },
             recentProjects,
+            recentProperties,
             recentRequirements,
             recentUsers
         });
