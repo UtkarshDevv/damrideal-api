@@ -66,10 +66,10 @@ router.post('/', auth, async (req, res) => {
 
         const newProject = new Project({
             title,
-            location: {
+            location: location ? {
                 place: location.place,
                 city: location.city
-            },
+            } : undefined,
             priceRange,
             about,
             description,
@@ -88,8 +88,12 @@ router.post('/', auth, async (req, res) => {
             galleryUrls: galleryUrls || [],
             brochureUrl,
             videoLink,
-            createdBy: req.user.id
+            createdBy: req.user ? req.user.id : null
         });
+
+        if (!req.user) {
+            return res.status(401).json({ msg: 'User not authenticated' });
+        }
 
         const project = await newProject.save();
         res.json(project);
