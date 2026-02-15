@@ -30,7 +30,7 @@ const ProjectSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['Ready to Move', 'Pre-Launch', 'Under Construction'],
+        enum: ['Ready to Move', 'Pre-Launch', 'Under Construction', 'Featured', 'Lead', 'EOI'],
         default: 'Ready to Move'
     },
     forSale: {
