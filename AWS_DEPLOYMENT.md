@@ -110,10 +110,10 @@ Nginx will redirect Port 80 traffic to your Node.js app on Port 5000.
    ```nginx
    server {
        listen 80;
-       server_name your-public-ip-here; # <--- Replace with your EC2 Public IP
+       server_name 13.235.2.179;
 
        location / {
-           proxy_pass http://localhost:5000; # <--- Keep as localhost
+           proxy_pass http://localhost:5000;
            proxy_http_version 1.1;
            proxy_set_header Upgrade $http_upgrade;
            proxy_set_header Connection 'upgrade';
@@ -139,7 +139,7 @@ If you have a domain, use Let's Encrypt for free SSL.
 ```bash
 sudo snap install --classic certbot
 sudo ln -s /snap/bin/certbot /usr/bin/certbot
-sudo certbot --nginx -d yourdomain.com
+sudo certbot --nginx -d app.daamrideals.com
 ```
 
 ---
@@ -148,6 +148,7 @@ sudo certbot --nginx -d yourdomain.com
 
 - **Check Logs**: `pm2 logs damrideal-api`
 - **Restart App**: `pm2 restart damrideal-api`
+- **SSL Validation Failed**: If Certbot fails with an "Invalid response" and shows an IPv6 address (e.g., `2a02:...`), check your DNS settings. Ensure there are **NO AAAA records** for your domain (`app.daamrideals.com`) unless you have explicitly configured IPv6 on EC2. Delete any default AAAA records provided by your registrar.
 - **Check MongoDB Connection**: Ensure the EC2 instance IP is whitelisted in MongoDB Atlas Network Access.
 
 ---

@@ -14,10 +14,10 @@ router.get('/', async (req, res) => {
     }
 });
 
-// GET unique locations
+// GET unique locations (Cities)
 router.get('/locations', async (req, res) => {
     try {
-        const locations = await Project.distinct('location');
+        const locations = await Project.distinct('location.city');
         res.json(locations.filter(Boolean)); // Remove null/empty values
     } catch (err) {
         console.error(err.message);
@@ -59,34 +59,43 @@ router.post('/', auth, async (req, res) => {
     try {
         const {
             title, location, priceRange, about, description,
-            projectSize, launchDate, type, forSale, forRent,
-            topAmenities, tags, status, imageName, imageUrl
+            options, totalUnits, launchDate, type, forSale, forRent,
+            topAmenities, tags, status, imageName, imageUrl,
+            gallery, galleryUrls, brochureUrl, videoLink
         } = req.body;
 
         const newProject = new Project({
             title,
-            location,
+            location: {
+                place: location.place,
+                city: location.city
+            },
             priceRange,
             about,
             description,
-            projectSize,
+            options,
+            totalUnits,
             launchDate,
-            type: type || 'Lead',
+            type: type || 'Ready to Move',
             forSale: forSale || false,
-            forRent: forRent || false, // Use specific field names instead of spreading entire object for safety
-            topAmenities: topAmenities || [],
-            tags: tags || [],
+            forRent: forRent || false,
+            topAmenities, // String now
+            tags, // String now
             status: status || 'Active',
             imageName,
             imageUrl,
+            gallery: gallery || [],
+            galleryUrls: galleryUrls || [],
+            brochureUrl,
+            videoLink,
             createdBy: req.user.id
         });
 
         const project = await newProject.save();
         res.json(project);
     } catch (err) {
-        console.error(err.message);
-        res.status(500).json({ msg: 'Server error' });
+        console.error('Error creating project:', err.message);
+        res.status(500).json({ msg: 'Server error', error: err.message });
     }
 });
 
@@ -96,9 +105,9 @@ router.put('/:id', auth, async (req, res) => {
     try {
         const {
             title, location, priceRange, about, description,
-            projectSize, launchDate, type, forSale, forRent,
+            options, totalUnits, launchDate, type, forSale, forRent,
             topAmenities, tags, status, imageName, imageUrl,
-            gallery, galleryUrls, brochureUrl
+            gallery, galleryUrls, brochureUrl, videoLink
         } = req.body;
 
         const updateFields = {};
@@ -107,7 +116,8 @@ router.put('/:id', auth, async (req, res) => {
         if (priceRange !== undefined) updateFields.priceRange = priceRange;
         if (about !== undefined) updateFields.about = about;
         if (description !== undefined) updateFields.description = description;
-        if (projectSize !== undefined) updateFields.projectSize = projectSize;
+        if (options !== undefined) updateFields.options = options;
+        if (totalUnits !== undefined) updateFields.totalUnits = totalUnits;
         if (launchDate !== undefined) updateFields.launchDate = launchDate;
         if (type !== undefined) updateFields.type = type;
         if (forSale !== undefined) updateFields.forSale = forSale;
@@ -117,6 +127,7 @@ router.put('/:id', auth, async (req, res) => {
         if (status !== undefined) updateFields.status = status;
         if (imageName !== undefined) updateFields.imageName = imageName;
         if (imageUrl !== undefined) updateFields.imageUrl = imageUrl;
+        if (videoLink !== undefined) updateFields.videoLink = videoLink;
 
         if (gallery !== undefined) updateFields.gallery = gallery;
         if (galleryUrls !== undefined) updateFields.galleryUrls = galleryUrls;

@@ -6,7 +6,7 @@ const ProjectSchema = new mongoose.Schema({
         required: true
     },
     location: {
-        type: String,
+        type: mongoose.Schema.Types.Mixed, // Allow String (legacy) or Object { place, city }
         required: true
     },
     priceRange: {
@@ -19,16 +19,19 @@ const ProjectSchema = new mongoose.Schema({
     description: {
         type: String
     },
-    projectSize: {
-        type: String
+    options: {
+        type: String // Was projectSize
+    },
+    totalUnits: {
+        type: Number
     },
     launchDate: {
-        type: String
+        type: String // dd-mm-yyyy
     },
     type: {
         type: String,
-        enum: ['Featured', 'Lead', 'EOI', 'User Listing'],
-        default: 'Lead'
+        enum: ['Ready to Move', 'Pre-Launch', 'Under Construction'],
+        default: 'Ready to Move'
     },
     forSale: {
         type: Boolean,
@@ -38,9 +41,9 @@ const ProjectSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    topAmenities: [{
-        type: String
-    }],
+    topAmenities: {
+        type: String // CSV String
+    },
     gallery: [{
         type: String // Original image filenames
     }],
@@ -56,9 +59,12 @@ const ProjectSchema = new mongoose.Schema({
     brochureUrl: {
         type: String // S3 URL for PDF brochure
     },
-    tags: [{
-        type: String
-    }],
+    videoLink: {
+        type: String // Video link
+    },
+    tags: {
+        type: String // Text
+    },
     status: {
         type: String,
         enum: ['Active', 'Inactive', 'Coming Soon', 'Sold Out', 'Pending'],
