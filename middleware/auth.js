@@ -2,7 +2,15 @@ const jwt = require('jsonwebtoken');
 
 module.exports = function (req, res, next) {
     // Get token from header
-    const token = req.header('x-auth-token');
+    let token = req.header('x-auth-token');
+
+    // Check Authorization header if x-auth-token not found
+    if (!token && req.header('Authorization')) {
+        const parts = req.header('Authorization').split(' ');
+        if (parts.length === 2 && parts[0] === 'Bearer') {
+            token = parts[1];
+        }
+    }
 
     // Check if not token
     if (!token) {
@@ -12,10 +20,13 @@ module.exports = function (req, res, next) {
     // Verify token
     try {
         // NOTE: In production, secret should be from env
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-        req.user = decoded.user;
+        const secret = process.env.JWT_SECRET || 'secret';
+        const decoded = jwt.verify(token, secret);
+        req.user = decoded.user || decoded.admin; // Allow both user and admin tokens
         next();
     } catch (err) {
+        console.error('Token verification failed:', err.message);
+        // console.log('Secret used:', secret); // Debugging
         res.status(401).json({ msg: 'Token is not valid' });
     }
 };

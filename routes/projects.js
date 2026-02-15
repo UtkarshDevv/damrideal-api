@@ -57,6 +57,10 @@ router.get('/:id', async (req, res) => {
 // POST create a new project (Protected)
 router.post('/', auth, async (req, res) => {
     try {
+        if (!req.user) {
+            return res.status(401).json({ msg: 'User not authenticated' });
+        }
+
         const {
             title, location, priceRange, about, description,
             options, totalUnits, launchDate, type, forSale, forRent,
@@ -66,10 +70,7 @@ router.post('/', auth, async (req, res) => {
 
         const newProject = new Project({
             title,
-            location: location ? {
-                place: location.place,
-                city: location.city
-            } : undefined,
+            location: location,
             priceRange,
             about,
             description,
@@ -79,8 +80,8 @@ router.post('/', auth, async (req, res) => {
             type: type || 'Ready to Move',
             forSale: forSale || false,
             forRent: forRent || false,
-            topAmenities, // String now
-            tags, // String now
+            topAmenities,
+            tags,
             status: status || 'Active',
             imageName,
             imageUrl,
@@ -88,12 +89,8 @@ router.post('/', auth, async (req, res) => {
             galleryUrls: galleryUrls || [],
             brochureUrl,
             videoLink,
-            createdBy: req.user ? req.user.id : null
+            createdBy: req.user.id
         });
-
-        if (!req.user) {
-            return res.status(401).json({ msg: 'User not authenticated' });
-        }
 
         const project = await newProject.save();
         res.json(project);
