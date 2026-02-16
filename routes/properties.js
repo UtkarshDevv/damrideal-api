@@ -33,6 +33,9 @@ router.get('/', async (req, res) => {
         if (req.query.forRent) filter.forRent = req.query.forRent === 'true';
         if (req.query.type) filter.type = req.query.type;
 
+        // Exclude inactive properties
+        filter.status = { $nin: ['Inactive', 'inactive'] };
+
         const properties = await Property.find(filter).sort({ createdAt: -1 });
         res.json(properties);
     } catch (err) {

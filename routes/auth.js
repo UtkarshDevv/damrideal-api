@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const User = require('../models/User');
 const Project = require('../models/Project');
+const Property = require('../models/Property');
 const auth = require('../middleware/auth');
 
 // Nodemailer Transporter
@@ -308,11 +309,29 @@ router.delete('/favorites/:id', auth, async (req, res) => {
     }
 });
 
-// 10. Get Favorites (Populated)
+// 10. Get Favorites (Populated from both Projects and Properties)
 router.get('/favorites', auth, async (req, res) => {
     try {
-        const user = await User.findById(req.user.id).populate('favorites');
-        res.json(user.favorites || []);
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ msg: 'User not found' });
+
+        const favoriteIds = user.favorites;
+
+        // Fetch from both collections in parallel
+        const [projects, properties] = await Promise.all([
+            Project.find({ _id: { $in: favoriteIds } }),
+            Property.find({ _id: { $in: favoriteIds } })
+        ]);
+
+        const projectsWithType = projects.map(p => ({ ...p.toObject(), type: 'project' }));
+        const propertiesWithType = properties.map(p => ({ ...p.toObject(), type: 'property' }));
+
+        // Combine and sort by newest first
+        const combinedFavorites = [...projectsWithType, ...propertiesWithType].sort((a, b) =>
+            new Date(b.createdAt) - new Date(a.createdAt)
+        );
+
+        res.json(combinedFavorites);
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server error');

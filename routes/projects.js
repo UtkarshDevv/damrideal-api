@@ -22,6 +22,9 @@ router.get('/', async (req, res) => {
         if (req.query.forRent) filter.forRent = req.query.forRent === 'true';
         if (req.query.type) filter.type = req.query.type;
 
+        // Exclude inactive projects
+        filter.status = { $ne: 'Inactive' };
+
         const projects = await Project.find(filter).sort({ createdAt: -1 });
         res.json(projects);
     } catch (err) {
