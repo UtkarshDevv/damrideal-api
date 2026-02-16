@@ -55,6 +55,7 @@ app.use('/api/requests', require('./routes/requests'));
 // Admin Routes
 app.use('/api/admin', require('./admin/routes/adminAuth'));
 app.use('/api/admin/dashboard', require('./admin/routes/adminDashboard'));
+app.use('/api/admin/utils', require('./routes/admin-utils'));
 
 // Connect to MongoDB
 const PORT = process.env.PORT || 5000;

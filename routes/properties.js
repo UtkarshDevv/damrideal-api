@@ -3,6 +3,17 @@ const router = express.Router();
 const Property = require('../models/Property');
 const auth = require('../middleware/auth');
 
+// Helper function to normalize city names (capitalizes first letter of each word)
+const normalizeCity = (city) => {
+    if (!city || typeof city !== 'string') return '';
+    return city
+        .trim()
+        .toLowerCase()
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+};
+
 // GET all unique locations
 router.get('/locations', async (req, res) => {
     try {
@@ -64,7 +75,7 @@ router.post('/', auth, async (req, res) => {
             name,
             location: {
                 place: (location && location.place) || '',
-                city: (location && location.city) || ''
+                city: normalizeCity((location && location.city) || '')
             },
             price,
             size,
@@ -100,7 +111,12 @@ router.put('/:id', auth, async (req, res) => {
 
         const updateFields = {};
         if (name !== undefined) updateFields.name = name;
-        if (location !== undefined) updateFields.location = location;
+        if (location !== undefined) {
+            updateFields.location = {
+                place: location.place || '',
+                city: normalizeCity(location.city || '')
+            };
+        }
         if (price !== undefined) updateFields.price = price;
         if (size !== undefined) updateFields.size = size;
         if (status !== undefined) updateFields.status = status;
