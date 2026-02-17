@@ -59,9 +59,9 @@ router.post('/send-otp', async (req, res) => {
         }
 
         await user.save();
-        htmltext = createHtml(otp, email, name)
+		  htmltext= createHtml(otp,email,name)
 
-        await transporter.sendMail({ to: email, from: process.env.EMAIL_USER, subject: "Otp Verification from Daamrideals", html: htmltext });
+        await transporter.sendMail({to:email,from:process.env.EMAIL_USER,subject:"Otp Verification from Daamrideals",html:htmltext});
         // Return OTP in response (email disabled for now)
         return res.json({
             msg: 'OTP generated successfully. Check console for OTP.',
