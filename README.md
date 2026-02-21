@@ -46,4 +46,6 @@ For detailed instructions on how to deploy this API to **AWS EC2**, please refer
 - `/api/requirements` - User Requirements
 - `/api/upload` - Media Uploads (S3)
 - `/api/settings` - Global App Settings
-- `/api/admin` - Admin Authentication & Dashboard
+
+- `/api/admin` - Admin Authentication & Dashboard .
+- 
